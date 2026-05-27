@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrueMafia — Лобби</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🎭</span>
+                <span class="logo-text">TrueMafia</span>
+            </div>
+            <nav class="nav">
+                <a href="index.html" class="nav-link active">Лобби</a>
+                <a href="profile.html" class="nav-link">Профиль</a>
+                <a href="#" class="nav-link" id="shop-link">Магазин</a>
+                <div class="user-balance">
+                    <span class="balance-icon">💰</span>
+                    <span class="balance-amount" id="header-balance">100</span>
+                </div>
+                <div class="user-avatar" id="user-avatar">
+                    <img src="https://via.placeholder.com/40" alt="avatar" id="avatar-img">
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Hero Section -->
+            <section class="hero">
+                <div class="hero-bg"></div>
+                <div class="hero-content">
+                    <h1 class="hero-title">🎭 TrueMafia</h1>
+                    <p class="hero-subtitle">Классическая мафия в браузере. Играй с друзьями или с ботами!</p>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-number" id="online-count">0</span>
+                            <span class="stat-label">онлайн</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number" id="games-count">0</span>
+                            <span class="stat-label">игр сейчас</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-large" id="create-room-btn">
+                        <span>🚀 Создать комнату</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Rooms List -->
+            <section class="rooms-section">
+                <div class="section-header">
+                    <h2>🏠 Активные комнаты</h2>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">Все</button>
+                        <button class="filter-tab" data-filter="waiting">Ожидание</button>
+                        <button class="filter-tab" data-filter="playing">В игре</button>
+                    </div>
+                </div>
+                <div class="rooms-grid" id="rooms-grid">
+                    <!-- Rooms will be injected here -->
+                    <div class="room-card skeleton"></div>
+                    <div class="room-card skeleton"></div>
+                    <div class="room-card skeleton"></div>
+                </div>
+            </section>
+
+            <!-- Quick Game -->
+            <section class="quick-game">
+                <div class="quick-game-card">
+                    <h3>⚡ Быстрая игра</h3>
+                    <p>Присоединись к случайной комнате или играй с ботами</p>
+                    <div class="quick-options">
+                        <button class="btn btn-secondary" id="quick-join-btn">
+                            <span>🎲 Случайная комната</span>
+                        </button>
+                        <button class="btn btn-outline" id="play-bots-btn">
+                            <span>🤖 Играть с ботами</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Rules Preview -->
+            <section class="rules-preview">
+                <h2>📖 Роли</h2>
+                <div class="roles-carousel" id="roles-carousel">
+                    <div class="role-card" data-role="civilian">
+                        <div class="role-icon">👨‍🌾</div>
+                        <h4>Мирный</h4>
+                        <p>Обычный житель. Спит ночью, голосует днём.</p>
+                    </div>
+                    <div class="role-card" data-role="mafia">
+                        <div class="role-icon">🔪</div>
+                        <h4>Мафия</h4>
+                        <p>Убивает ночью. Побеждает, если мафии ≥ мирных.</p>
+                    </div>
+                    <div class="role-card" data-role="don">
+                        <div class="role-icon">👑</div>
+                        <h4>Дон</h4>
+                        <p>Глава мафии. Узнаёт комиссара ночью.</p>
+                    </div>
+                    <div class="role-card" data-role="detective">
+                        <div class="role-icon">🕵️‍♂️</div>
+                        <h4>Комиссар</h4>
+                        <p>Проверяет игроков ночью.</p>
+                    </div>
+                    <div class="role-card" data-role="doctor">
+                        <div class="role-icon">🏥</div>
+                        <h4>Доктор</h4>
+                        <p>Лечит одного игрока каждую ночь.</p>
+                    </div>
+                    <div class="role-card" data-role="maniac">
+                        <div class="role-icon">🔪🎭</div>
+                        <h4>Маньяк</h4>
+                        <p>Убивает одиночку. Побеждает, оставшись один.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Create Room Modal -->
+        <div class="modal" id="create-modal">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <button class="modal-close">&times;</button>
+                <h2>🚀 Создать комнату</h2>
+                <form id="create-room-form">
+                    <div class="form-group">
+                        <label>Название комнаты</label>
+                        <input type="text" id="room-name" placeholder="Моя мафия" maxlength="30">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Мин. игроков</label>
+                            <input type="number" id="min-players" value="4" min="3" max="12">
+                        </div>
+                        <div class="form-group">
+                            <label>Макс. игроков</label>
+                            <input type="number" id="max-players" value="12" min="4" max="20">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Время регистрации (сек)</label>
+                            <input type="number" id="reg-time" value="60" min="20" max="300">
+                        </div>
+                        <div class="form-group">
+                            <label>Время ночи (сек)</label>
+                            <input type="number" id="night-time" value="60" min="20" max="300">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Время дня (сек)</label>
+                            <input type="number" id="day-time" value="120" min="30" max="300">
+                        </div>
+                        <div class="form-group">
+                            <label>Время голосования (сек)</label>
+                            <input type="number" id="vote-time" value="30" min="15" max="120">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="show-roles" checked>
+                            <span>Показывать роли при смерти</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>Режим</label>
+                        <select id="game-mode">
+                            <option value="classic">Классический</option>
+                            <option value="extended">Расширенный</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Создать</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>TrueMafia © 2026 | Браузерная мафия с ботами</p>
+        </footer>
+    </div>
+
+    <script src="js/websocket.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/lobby.js"></script>
+</body>
+</html>

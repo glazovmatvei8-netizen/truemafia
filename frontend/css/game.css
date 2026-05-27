@@ -1,0 +1,716 @@
+/* ===== GAME APP ===== */
+.game-app {
+    position: relative;
+    overflow: hidden;
+}
+
+/* ===== NIGHT / DAY OVERLAYS ===== */
+.night-overlay, .day-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 2s ease;
+}
+
+.night-overlay {
+    background: linear-gradient(to bottom, #0a0a2e 0%, #000 100%);
+}
+
+.day-overlay {
+    background: linear-gradient(to bottom, #ff9a56 0%, #ff6b6b 50%, #4ecdc4 100%);
+}
+
+.night-overlay.active, .day-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.night-stars {
+    position: absolute;
+    inset: 0;
+    background-image: 
+        radial-gradient(2px 2px at 20px 30px, white, transparent),
+        radial-gradient(2px 2px at 40px 70px, white, transparent),
+        radial-gradient(1px 1px at 90px 40px, white, transparent),
+        radial-gradient(2px 2px at 160px 120px, white, transparent),
+        radial-gradient(1px 1px at 230px 80px, white, transparent);
+    background-size: 250px 250px;
+    animation: twinkle 4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+.night-moon, .day-sun {
+    font-size: 80px;
+    animation: float 3s ease-in-out infinite;
+    z-index: 1;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+.night-text, .day-text {
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    margin-top: 20px;
+    z-index: 1;
+    text-shadow: 0 0 20px currentColor;
+}
+
+.night-text { color: #a0a0ff; }
+.day-text { color: #fff; }
+
+/* ===== GAME HEADER ===== */
+.game-header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+}
+
+.game-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.game-phase {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    min-width: 140px;
+}
+
+.game-round {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.game-timer {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    padding: 6px 14px;
+    border-radius: 20px;
+    min-width: 80px;
+    text-align: center;
+}
+
+.game-timer.warning {
+    animation: timerWarning 1s ease-in-out infinite;
+    color: var(--accent-red);
+}
+
+@keyframes timerWarning {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.game-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ===== GAME MAIN ===== */
+.game-main {
+    flex: 1;
+    display: flex;
+    position: relative;
+    padding: 20px;
+    gap: 20px;
+}
+
+/* ===== PLAYERS TABLE ===== */
+.players-table {
+    flex: 1;
+    position: relative;
+    min-height: 500px;
+}
+
+.player-seat {
+    position: absolute;
+    width: 100px;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.player-avatar-game {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid var(--border-color);
+    margin: 0 auto 8px;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    transition: var(--transition);
+}
+
+.player-seat.alive .player-avatar-game {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 15px rgba(78, 204, 163, 0.3);
+}
+
+.player-seat.dead .player-avatar-game {
+    border-color: #333;
+    opacity: 0.5;
+    filter: grayscale(100%);
+}
+
+.player-seat.dead .player-avatar-game::after {
+    content: '💀';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.6);
+    font-size: 30px;
+}
+
+.player-seat.nominated .player-avatar-game {
+    border-color: var(--accent-red);
+    animation: nominatedPulse 1s ease-in-out infinite;
+}
+
+@keyframes nominatedPulse {
+    0%, 100% { box-shadow: 0 0 5px rgba(233, 69, 96, 0.3); }
+    50% { box-shadow: 0 0 25px rgba(233, 69, 96, 0.8); }
+}
+
+.player-seat.my-turn .player-avatar-game {
+    border-color: var(--accent-gold);
+    animation: myTurnGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes myTurnGlow {
+    0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+    50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+}
+
+.player-name-game {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-role-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    margin-top: 4px;
+    display: inline-block;
+}
+
+.player-votes {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: var(--accent-red);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: votePop 0.3s ease;
+}
+
+@keyframes votePop {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+/* ===== CENTER AREA ===== */
+.center-area {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 10;
+}
+
+.center-card {
+    width: 120px;
+    height: 160px;
+    background: linear-gradient(135deg, var(--text-primary), #8b1c3a);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    margin: 0 auto 16px;
+    box-shadow: var(--shadow-glow);
+    animation: cardFloat 3s ease-in-out infinite;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.center-card:hover {
+    transform: scale(1.1);
+}
+
+.center-card.flipped {
+    animation: cardFlip 0.6s ease;
+}
+
+@keyframes cardFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(2deg); }
+}
+
+@keyframes cardFlip {
+    0% { transform: rotateY(0); }
+    50% { transform: rotateY(90deg); }
+    100% { transform: rotateY(0); }
+}
+
+.card-back {
+    backface-visibility: hidden;
+}
+
+.center-message {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 300px;
+    margin: 0 auto 16px;
+    min-height: 24px;
+}
+
+.center-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ===== CHAT PANEL ===== */
+.chat-panel {
+    width: 300px;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition);
+}
+
+.chat-panel.collapsed {
+    width: 40px;
+}
+
+.chat-panel.collapsed .chat-messages,
+.chat-panel.collapsed .chat-input-area {
+    display: none;
+}
+
+.chat-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    scrollbar-width: thin;
+}
+
+.chat-message {
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    line-height: 1.4;
+    max-width: 100%;
+    word-wrap: break-word;
+    animation: fadeIn 0.3s ease;
+}
+
+.chat-message.player {
+    background: var(--bg-card);
+    align-self: flex-start;
+}
+
+.chat-message.player .msg-author {
+    color: var(--accent-gold);
+    font-weight: 600;
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+
+.chat-message.system {
+    background: rgba(233, 69, 96, 0.1);
+    border: 1px solid rgba(233, 69, 96, 0.2);
+    color: var(--text-primary);
+    text-align: center;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.chat-message.mafia {
+    background: rgba(233, 69, 96, 0.15);
+    border: 1px solid rgba(233, 69, 96, 0.3);
+}
+
+.chat-input-area {
+    padding: 12px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 8px;
+}
+
+.chat-input-area input {
+    flex: 1;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.chat-input-area input:focus {
+    outline: none;
+    border-color: var(--text-primary);
+}
+
+.chat-input-area input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== ROLE REVEAL ===== */
+.role-reveal {
+    text-align: center;
+}
+
+.role-card-large {
+    width: 200px;
+    height: 280px;
+    margin: 0 auto 24px;
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+    border: 2px solid var(--text-primary);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    animation: roleReveal 0.8s ease;
+}
+
+@keyframes roleReveal {
+    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+    60% { transform: scale(1.1) rotate(10deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.role-emoji {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.role-card-large h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+
+.role-card-large p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.role-team {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.role-team.mafia {
+    background: rgba(233, 69, 96, 0.2);
+    color: var(--accent-red);
+}
+
+.role-team.civilian {
+    background: rgba(78, 204, 163, 0.2);
+    color: var(--accent-green);
+}
+
+.role-team.neutral {
+    background: rgba(255, 215, 0, 0.2);
+    color: var(--accent-gold);
+}
+
+/* ===== TARGETS GRID ===== */
+.targets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.target-btn {
+    padding: 12px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+}
+
+.target-btn:hover {
+    border-color: var(--text-primary);
+    background: rgba(233, 69, 96, 0.1);
+}
+
+.target-btn.selected {
+    border-color: var(--accent-green);
+    background: rgba(78, 204, 163, 0.2);
+}
+
+.target-btn.dead {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* ===== VOTE RESULTS ===== */
+.vote-results {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 16px 24px;
+    z-index: 200;
+    display: none;
+    min-width: 300px;
+}
+
+.vote-results.active {
+    display: block;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+.vote-bar-container {
+    height: 20px;
+    background: var(--bg-card);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.vote-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--text-primary), var(--accent-red));
+    border-radius: 10px;
+    transition: width 0.5s ease;
+    width: 0%;
+}
+
+/* ===== DEATH SCREEN ===== */
+.death-screen {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease;
+}
+
+.death-screen.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.death-skull {
+    font-size: 100px;
+    animation: skullShake 0.5s ease;
+}
+
+@keyframes skullShake {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+}
+
+.death-text {
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    color: var(--accent-red);
+    margin-top: 20px;
+}
+
+.death-role {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+
+/* ===== GAME OVER ===== */
+.game-over {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease;
+}
+
+.game-over.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.game-over-content {
+    text-align: center;
+    animation: gameOverIn 0.8s ease;
+}
+
+@keyframes gameOverIn {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.game-over-content h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 36px;
+    margin-bottom: 16px;
+}
+
+.game-over-content p {
+    font-size: 18px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+}
+
+.winners-list {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+}
+
+.winner-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.winner-item img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 3px solid var(--accent-gold);
+}
+
+.winner-item span {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ===== RESPONSIVE GAME ===== */
+@media (max-width: 768px) {
+    .game-main {
+        flex-direction: column;
+    }
+
+    .chat-panel {
+        width: 100%;
+        height: 200px;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .players-table {
+        min-height: 300px;
+    }
+
+    .player-seat {
+        width: 70px;
+    }
+
+    .player-avatar-game {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+    }
+
+    .center-card {
+        width: 80px;
+        height: 110px;
+        font-size: 40px;
+    }
+
+    .game-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .game-info {
+        gap: 10px;
+    }
+}

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 TrueMafia - Тест соединения</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            text-shadow: 0 0 20px rgba(255,0,0,0.5);
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        .status.connected { background: #00ff88; color: #000; }
+        .status.disconnected { background: #ff4444; color: #fff; }
+        .status.connecting { background: #ffaa00; color: #000; }
+
+        .panel {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+        .panel h2 {
+            margin-bottom: 15px;
+            color: #ff6b6b;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            background: rgba(255,255,255,0.15);
+        }
+        button {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255,107,107,0.4);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .log {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .log-entry.error { color: #ff4444; }
+        .log-entry.success { color: #00ff88; }
+        .log-entry.info { color: #66ccff; }
+
+        .players-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .player-tag {
+            background: rgba(255,255,255,0.1);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎭 TrueMafia</h1>
+        <p>Браузерная мафия с ботами</p>
+    </div>
+
+    <div id="status" class="status disconnected">🔴 Нет соединения</div>
+
+    <div class="panel">
+        <h2>👤 Ваше имя</h2>
+        <input type="text" id="playerName" placeholder="Введите имя..." value="Игрок">
+    </div>
+
+    <div class="panel">
+        <h2>🚪 Комната</h2>
+        <input type="text" id="roomId" placeholder="ID комнаты..." value="room1">
+        <button id="joinBtn" onclick="joinRoom()">Присоединиться</button>
+        <button id="createBtn" onclick="createRoom()" style="background: linear-gradient(135deg, #4ecdc4, #44a08d);">Создать новую</button>
+    </div>
+
+    <div class="panel" id="lobbyPanel" style="display:none;">
+        <h2>👥 Лобби (<span id="playerCount">0</span>/<span id="maxPlayers">12</span>)</h2>
+        <div class="players-list" id="playersList"></div>
+        <button id="startBtn" onclick="startGame()" style="margin-top: 15px; background: linear-gradient(135deg, #f093fb, #f5576c);">
+            🚀 Начать игру
+        </button>
+    </div>
+
+    <div class="panel">
+        <h2>📋 Лог событий</h2>
+        <div class="log" id="log"></div>
+    </div>
+
+    <!-- Socket.IO клиент (подключается автоматически от сервера) -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+        const socket = io();
+        let currentRoom = null;
+        let myId = null;
+
+        // ================= СОЕДИНЕНИЕ =================
+
+        socket.on('connect', () => {
+            log('✅ Подключено к серверу! Socket ID: ' + socket.id, 'success');
+            updateStatus('connected', '🟢 Соединение установлено');
+        });
+
+        socket.on('disconnect', (reason) => {
+            log('❌ Отключено: ' + reason, 'error');
+            updateStatus('disconnected', '🔴 Соединение потеряно');
+            document.getElementById('lobbyPanel').style.display = 'none';
+        });
+
+        socket.on('connect_error', (err) => {
+            log('⚠️ Ошибка соединения: ' + err.message, 'error');
+            updateStatus('disconnected', '🔴 Ошибка подключения');
+        });
+
+        // ================= ЛОББИ =================
+
+        socket.on('lobby_update', (data) => {
+            log('📋 Обновление лобби: ' + data.players.length + ' игроков');
+            updateLobby(data.players, data.maxPlayers);
+        });
+
+        socket.on('player_joined', (data) => {
+            log('➕ ' + data.name + ' присоединился!', 'success');
+            addPlayerToLobby(data);
+        });
+
+        socket.on('player_left', (data) => {
+            log('➖ ' + data.name + ' вышел');
+            removePlayerFromLobby(data.id);
+        });
+
+        socket.on('game_starting', (data) => {
+            log('🎭 Игра начинается! Игроков: ' + data.playerCount, 'success');
+            document.getElementById('lobbyPanel').style.display = 'none';
+        });
+
+        socket.on('role_assigned', (data) => {
+            log('🎭 Ваша роль: ' + data.role + ' (' + data.team + ')', 'success');
+            alert('🎭 ВАША РОЛЬ: ' + data.emoji + ' ' + data.role + '\n\n' + data.description);
+        });
+
+        socket.on('mafia_allies', (data) => {
+            const names = data.allies.map(a => a.name + ' (' + a.role + ')').join('\n');
+            log('🦅 Союзники мафии:\n' + names, 'info');
+        });
+
+        // ================= ФАЗЫ ИГРЫ =================
+
+        socket.on('phase_change', (data) => {
+            log('🔄 Фаза: ' + data.phase + ' | Раунд: ' + data.round);
+        });
+
+        socket.on('night_action_request', (data) => {
+            log('🌙 Ночное действие: ' + data.action);
+            const targets = data.targets.map(t => t.name).join(', ');
+            const target = prompt('Выберите цель:\n' + targets + '\n\n(введите имя или "skip")');
+
+            if (target && target.toLowerCase() !== 'skip') {
+                const t = data.targets.find(x => x.name.toLowerCase() === target.toLowerCase());
+                if (t) {
+                    socket.emit('night_action', { action: data.action, targetId: t.id });
+                    log('✅ Цель выбрана: ' + t.name);
+                }
+            } else {
+                socket.emit('night_action', { action: data.action, targetId: null });
+                log('🚫 Пропущено');
+            }
+        });
+
+        socket.on('vote_start', (data) => {
+            log('🗳 Голосование! Кандидаты: ' + data.candidates.map(c => c.name).join(', '));
+            const names = data.candidates.map((c, i) => (i+1) + '. ' + c.name).join('\n');
+            const choice = prompt('За кого голосуем?\n' + names + '\n\n(номер или "skip")');
+
+            if (choice && choice.toLowerCase() !== 'skip') {
+                const idx = parseInt(choice) - 1;
+                if (data.candidates[idx]) {
+                    socket.emit('vote', { targetId: data.candidates[idx].id });
+                }
+            } else {
+                socket.emit('skip_vote', {});
+            }
+        });
+
+        socket.on('vote_update', (data) => {
+            log('🗳 Голоса обновлены');
+        });
+
+        socket.on('night_results', (data) => {
+            if (data.killed.length > 0) {
+                const victims = data.killed.map(k => k.name + (data.showRoles ? ' (' + k.role + ')' : '')).join(', ');
+                log('💀 Жертвы ночи: ' + victims, 'error');
+            } else {
+                log('🕊️ Спокойная ночь! Никто не пострадал.', 'success');
+            }
+        });
+
+        socket.on('player_died', (data) => {
+            log('💀 ' + data.playerId + ' погиб!', 'error');
+        });
+
+        socket.on('game_over', (data) => {
+            log('🏆 ПОБЕДИТЕЛИ: ' + data.winnerName + '!', 'success');
+            alert('🏆 ИГРА ОКОНЧЕНА\n\nПобедили: ' + data.winnerName + '\n\nНаграда: ' + data.reward + '💰');
+        });
+
+        socket.on('system_message', (data) => {
+            log('📢 ' + data.text, 'info');
+        });
+
+        socket.on('error', (data) => {
+            log('❌ Ошибка: ' + data.message, 'error');
+        });
+
+        // ================= ФУНКЦИИ =================
+
+        function joinRoom() {
+            const name = document.getElementById('playerName').value.trim();
+            const room = document.getElementById('roomId').value.trim();
+
+            if (!name) { alert('Введите имя!'); return; }
+            if (!room) { alert('Введите ID комнаты!'); return; }
+
+            currentRoom = room;
+            socket.emit('join_lobby', { roomId: room, playerName: name });
+            log('🚪 Присоединение к комнате: ' + room);
+
+            document.getElementById('lobbyPanel').style.display = 'block';
+        }
+
+        function createRoom() {
+            const name = document.getElementById('playerName').value.trim();
+            const room = 'room_' + Date.now();
+
+            document.getElementById('roomId').value = room;
+            joinRoom();
+            log('✅ Комната создана: ' + room, 'success');
+        }
+
+        function startGame() {
+            socket.emit('start_game', { roomId: currentRoom });
+            log('🚀 Запрос на начало игры...');
+        }
+
+        function updateLobby(players, max) {
+            document.getElementById('playerCount').textContent = players.length;
+            document.getElementById('maxPlayers').textContent = max;
+
+            const list = document.getElementById('playersList');
+            list.innerHTML = '';
+            players.forEach(p => {
+                const tag = document.createElement('div');
+                tag.className = 'player-tag';
+                tag.id = 'lobby-player-' + p.id;
+                tag.innerHTML = '👤 ' + p.name;
+                list.appendChild(tag);
+            });
+        }
+
+        function addPlayerToLobby(player) {
+            const list = document.getElementById('playersList');
+            const count = document.getElementById('playerCount');
+            count.textContent = parseInt(count.textContent) + 1;
+
+            const tag = document.createElement('div');
+            tag.className = 'player-tag';
+            tag.id = 'lobby-player-' + player.id;
+            tag.innerHTML = '👤 ' + player.name;
+            list.appendChild(tag);
+        }
+
+        function removePlayerFromLobby(playerId) {
+            const tag = document.getElementById('lobby-player-' + playerId);
+            if (tag) {
+                tag.remove();
+                const count = document.getElementById('playerCount');
+                count.textContent = parseInt(count.textContent) - 1;
+            }
+        }
+
+        function updateStatus(cls, text) {
+            const el = document.getElementById('status');
+            el.className = 'status ' + cls;
+            el.textContent = text;
+        }
+
+        function log(msg, type = '') {
+            const logEl = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry ' + type;
+            entry.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Auto-connect log
+        log('⏳ Ожидание соединения с сервером...');
+    </script>
+</body>
+</html>

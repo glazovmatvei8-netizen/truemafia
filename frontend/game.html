@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrueMafia — Игра</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/game.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app game-app">
+        <!-- Night Overlay -->
+        <div class="night-overlay" id="night-overlay">
+            <div class="night-stars"></div>
+            <div class="night-moon">🌙</div>
+            <div class="night-text">Город засыпает...</div>
+        </div>
+
+        <!-- Day Overlay -->
+        <div class="day-overlay" id="day-overlay">
+            <div class="day-sun">☀️</div>
+            <div class="day-text">Город просыпается!</div>
+        </div>
+
+        <!-- Game Header -->
+        <header class="game-header">
+            <div class="game-info">
+                <div class="game-phase" id="game-phase">🎭 Ожидание</div>
+                <div class="game-round">Раунд <span id="round-number">0</span></div>
+                <div class="game-timer" id="game-timer">⏱ --:--</div>
+            </div>
+            <div class="game-actions">
+                <button class="btn btn-icon" id="settings-btn" title="Настройки">⚙️</button>
+                <button class="btn btn-icon" id="leave-btn" title="Покинуть игру">🚪</button>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <main class="game-main">
+            <!-- Players Table (Circle) -->
+            <div class="players-table" id="players-table">
+                <!-- Players positioned in circle -->
+            </div>
+
+            <!-- Center Area -->
+            <div class="center-area">
+                <div class="center-card" id="center-card">
+                    <div class="card-back">🎭</div>
+                </div>
+                <div class="center-message" id="center-message">
+                    Ожидание игроков...
+                </div>
+                <div class="center-actions" id="center-actions">
+                    <!-- Dynamic action buttons -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Chat Panel -->
+        <aside class="chat-panel" id="chat-panel">
+            <div class="chat-header">
+                <span>💬 Чат</span>
+                <button class="btn btn-icon btn-small" id="toggle-chat">👁</button>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-system">Добро пожаловать в игру!</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Написать сообщение..." maxlength="200">
+                <button class="btn btn-primary" id="send-msg-btn">➤</button>
+            </div>
+        </aside>
+
+        <!-- Role Card Modal -->
+        <div class="modal" id="role-modal">
+            <div class="modal-overlay"></div>
+            <div class="modal-content role-reveal">
+                <div class="role-card-large" id="role-card-large">
+                    <div class="role-card-front">
+                        <div class="role-emoji" id="role-emoji">🎭</div>
+                        <h2 id="role-name">Ваша роль</h2>
+                        <p id="role-desc">Описание роли...</p>
+                        <div class="role-team" id="role-team">Команда: ???</div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="close-role-btn">Понятно</button>
+            </div>
+        </div>
+
+        <!-- Action Modal (for night actions) -->
+        <div class="modal" id="action-modal">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <h2 id="action-title">Выберите цель</h2>
+                <div class="targets-grid" id="targets-grid">
+                    <!-- Target buttons -->
+                </div>
+                <button class="btn btn-secondary" id="skip-action-btn">🚫 Пропустить</button>
+            </div>
+        </div>
+
+        <!-- Vote Results -->
+        <div class="vote-results" id="vote-results">
+            <div class="vote-bar-container">
+                <div class="vote-bar" id="vote-bar"></div>
+            </div>
+            <div class="vote-counts" id="vote-counts"></div>
+        </div>
+
+        <!-- Death Animation -->
+        <div class="death-screen" id="death-screen">
+            <div class="death-skull">💀</div>
+            <div class="death-text" id="death-text">Игрок погиб</div>
+            <div class="death-role" id="death-role"></div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div class="game-over" id="game-over">
+            <div class="game-over-content">
+                <h1 id="winner-title">🏆 Игра окончена!</h1>
+                <p id="winner-text">Победители...</p>
+                <div class="winners-list" id="winners-list"></div>
+                <button class="btn btn-primary btn-large" id="play-again-btn">Играть снова</button>
+                <button class="btn btn-secondary" id="to-lobby-btn">В лобби</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/websocket.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
